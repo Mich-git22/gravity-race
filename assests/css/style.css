@@ -1,0 +1,15 @@
+body{
+background:#000;
+color:white;
+text-align:center;
+}
+
+canvas{
+background-image: url("../img/Fondo.jpg");
+background-size:cover;
+border:3px solid white;
+width:100%;
+max-width:900px;
+height:500px;
+cursor:url("../img/cursor.png"), auto;
+}
