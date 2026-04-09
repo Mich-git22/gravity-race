@@ -1,50 +1,291 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Nave vs Meteoritos PRO+</title>
 
-<title>Carrera de Gravedad</title>
+<style>
+body{
+    background:black;
+    color:white;
+    text-align:center;
+    font-family:Arial;
+}
 
-<link rel="icon" href="assests/img/favicon.png">
-
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-
-<link rel="stylesheet" href="assets/css/style.css">
+canvas{
+    border:3px solid white;
+    background: radial-gradient(circle, #000 40%, #020024 100%);
+    display:block;
+    margin:20px auto;
+}
+</style>
 
 </head>
-
 <body>
 
-<nav class="navbar navbar-dark bg-dark">
-<div class="container">
-<span class="navbar-brand">Carrera de Gravedad</span>
-</div>
-</nav>
-
-<div class="container text-center mt-4">
-
-<h3>Score: <span id="score">0</span></h3>
-<h5>Nivel: <span id="nivel">1</span></h5>
+<h1>🚀 Nave vs Meteoritos ☄️</h1>
+<p>ESPACIO = subir | F = disparar | R = reiniciar</p>
 
 <canvas id="gameCanvas"></canvas>
 
-<p class="mt-3">
-Haz click o toca la pantalla para crear gravedad y dirigir la nave.
-Evita meteoritos.
-</p>
+<script>
+const canvas = document.getElementById("gameCanvas");
+const ctx = canvas.getContext("2d");
 
-</div>
+canvas.width = 800;
+canvas.height = 400;
 
-<footer class="bg-dark text-white text-center p-3 mt-4">
+// 🚀 NAVE
+const player = {
+    x: 100,
+    y: 200,
+    width: 40,
+    height: 40,
+    velY: 0,
+    gravity: 0.5,
+    thrust: -10
+};
 
-Programador: Michelle Pacheco  
-Ingeniería en Sistemas
+// OBJETOS
+let meteors = [];
+let bullets = [];
+let particles = [];
 
-</footer>
+let frame = 0;
+let score = 0;
+let gameOver = false;
 
-<script src="assets/js/game.js"></script>
+// CONTROLES
+document.addEventListener("keydown", function(e){
+    if(e.code === "Space"){
+        player.velY = player.thrust;
+    }
+
+    if(e.key.toLowerCase() === "f"){
+        bullets.push({
+            x: player.x + 40,
+            y: player.y + 20,
+            speed: 8
+        });
+    }
+
+    if(e.key.toLowerCase() === "r"){
+        resetGame();
+    }
+});
+
+// RESET
+function resetGame(){
+    meteors = [];
+    bullets = [];
+    particles = [];
+    score = 0;
+    gameOver = false;
+    player.y = 200;
+}
+
+// CREAR METEORITO
+function createMeteor(){
+    let points = [];
+    let sides = 6 + Math.floor(Math.random()*4);
+
+    for(let i=0;i<sides;i++){
+        points.push({
+            angle: (Math.PI * 2 / sides) * i,
+            radius: 20 + Math.random()*10
+        });
+    }
+
+    meteors.push({
+        x: canvas.width,
+        y: Math.random() * (canvas.height - 60),
+        points: points,
+        rotation: 0,
+        rotationSpeed: (Math.random()*0.05) - 0.025,
+        speed: 3 + Math.random()*2,
+        size: 25,
+        alive:true
+    });
+}
+
+// EXPLOSIÓN
+function createExplosion(x,y){
+    for(let i=0;i<20;i++){
+        particles.push({
+            x:x,
+            y:y,
+            vx:(Math.random()-0.5)*5,
+            vy:(Math.random()-0.5)*5,
+            life:30
+        });
+    }
+}
+
+// UPDATE
+function update(){
+    frame++;
+
+    if(!gameOver){
+
+        player.velY += player.gravity;
+        player.y += player.velY;
+
+        if(player.y < 0) player.y = 0;
+        if(player.y > canvas.height - player.height){
+            player.y = canvas.height - player.height;
+        }
+
+        if(frame % 80 === 0){
+            createMeteor();
+        }
+
+        // METEORITOS
+        for(let m of meteors){
+            if(!m.alive) continue;
+
+            m.x -= m.speed;
+            m.rotation += m.rotationSpeed;
+
+            // COLISIÓN CON NAVE
+            if(
+                player.x < m.x + m.size &&
+                player.x + player.width > m.x - m.size &&
+                player.y < m.y + m.size &&
+                player.y + player.height > m.y - m.size
+            ){
+                gameOver = true;
+                createExplosion(player.x, player.y);
+            }
+        }
+
+        // BALAS
+        for(let b of bullets){
+            b.x += b.speed;
+        }
+
+        // COLISIÓN BALAS
+        for(let b of bullets){
+            for(let m of meteors){
+                if(!m.alive) continue;
+
+                if(
+                    b.x > m.x - m.size &&
+                    b.x < m.x + m.size &&
+                    b.y > m.y - m.size &&
+                    b.y < m.y + m.size
+                ){
+                    m.alive = false;
+                    createExplosion(m.x, m.y);
+                    score += 2;
+                }
+            }
+        }
+    }
+
+    // PARTÍCULAS
+    for(let p of particles){
+        p.x += p.vx;
+        p.y += p.vy;
+        p.life--;
+    }
+
+    particles = particles.filter(p => p.life > 0);
+}
+
+// DIBUJAR METEORITO
+function drawMeteor(m){
+    if(!m.alive) return;
+
+    ctx.save();
+    ctx.translate(m.x, m.y);
+    ctx.rotate(m.rotation);
+
+    ctx.beginPath();
+    ctx.moveTo(
+        Math.cos(m.points[0].angle) * m.points[0].radius,
+        Math.sin(m.points[0].angle) * m.points[0].radius
+    );
+
+    for(let p of m.points){
+        ctx.lineTo(
+            Math.cos(p.angle) * p.radius,
+            Math.sin(p.angle) * p.radius
+        );
+    }
+
+    ctx.closePath();
+
+    let gradient = ctx.createRadialGradient(0,0,5,0,0,40);
+    gradient.addColorStop(0, "#5a4a3f");
+    gradient.addColorStop(0.5, "#3b2f2f");
+    gradient.addColorStop(1, "#1a1a1a");
+
+    ctx.fillStyle = gradient;
+    ctx.fill();
+
+    ctx.restore();
+}
+
+// DRAW
+function draw(){
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+
+    // ESTRELLAS
+    for(let i=0;i<40;i++){
+        ctx.fillStyle = "white";
+        ctx.fillRect(Math.random()*800, Math.random()*400, 2, 2);
+    }
+
+    // NAVE
+    if(!gameOver){
+        ctx.fillStyle = "cyan";
+        ctx.beginPath();
+        ctx.moveTo(player.x, player.y);
+        ctx.lineTo(player.x, player.y + player.height);
+        ctx.lineTo(player.x + player.width, player.y + player.height/2);
+        ctx.closePath();
+        ctx.fill();
+    }
+
+    // BALAS
+    ctx.fillStyle = "yellow";
+    for(let b of bullets){
+        ctx.fillRect(b.x, b.y, 5, 3);
+    }
+
+    // METEORITOS
+    for(let m of meteors){
+        drawMeteor(m);
+    }
+
+    // PARTÍCULAS
+    ctx.fillStyle = "orange";
+    for(let p of particles){
+        ctx.fillRect(p.x, p.y, 3, 3);
+    }
+
+    // SCORE
+    ctx.fillStyle = "white";
+    ctx.font = "20px Arial";
+    ctx.fillText("Score: " + score, 10, 30);
+
+    if(gameOver){
+        ctx.font = "40px Arial";
+        ctx.fillText("GAME OVER", 250, 180);
+        ctx.font = "20px Arial";
+        ctx.fillText("Presiona R para reiniciar", 280, 220);
+    }
+}
+
+// LOOP
+function loop(){
+    update();
+    draw();
+    requestAnimationFrame(loop);
+}
+
+loop();
+</script>
 
 </body>
 </html>
