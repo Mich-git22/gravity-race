@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<title>Nave vs Meteoritos PRO MAX</title>
+<title>Nave vs Meteoritos NIVELES</title>
 
 <style>
 body{
@@ -39,14 +39,18 @@ canvas.height = 400;
 const player = {
     x: 100,
     y: 200,
-    width: 50,
+    width: 60,
     height: 40,
     velY: 0,
     gravity: 0.5,
     thrust: -10
 };
 
-// OBJETOS
+// VARIABLES
+let vidas = 3;
+let nivel = 1;
+let dificultad = 80;
+
 let meteors = [];
 let bullets = [];
 let particles = [];
@@ -54,6 +58,10 @@ let particles = [];
 let frame = 0;
 let score = 0;
 let gameOver = false;
+
+// 🛡️ INVENCIBILIDAD
+let invencible = false;
+let tiempoInvencible = 0;
 
 // CONTROLES
 document.addEventListener("keydown", function(e){
@@ -63,7 +71,7 @@ document.addEventListener("keydown", function(e){
 
     if(e.key.toLowerCase() === "f"){
         bullets.push({
-            x: player.x + 50,
+            x: player.x + 60,
             y: player.y + 20,
             speed: 8
         });
@@ -80,35 +88,39 @@ function resetGame(){
     bullets = [];
     particles = [];
     score = 0;
+    vidas = 3;
+    nivel = 1;
+    dificultad = 80;
     gameOver = false;
     player.y = 200;
+    invencible = false;
 }
 
-// CREAR METEORITO
+// ☄️ CREAR METEORITO
 function createMeteor(){
     let points = [];
-    let sides = 6 + Math.floor(Math.random()*4);
+    let sides = 7 + Math.floor(Math.random()*5);
 
     for(let i=0;i<sides;i++){
         points.push({
             angle: (Math.PI * 2 / sides) * i,
-            radius: 20 + Math.random()*10
+            radius: 20 + Math.random()*12
         });
     }
 
     meteors.push({
         x: canvas.width,
-        y: Math.random() * (canvas.height - 60),
+        y: Math.random() * canvas.height,
         points: points,
         rotation: 0,
-        rotationSpeed: (Math.random()*0.05) - 0.025,
-        speed: 3 + Math.random()*2,
-        size: 25,
+        rotationSpeed: (Math.random()*0.04) - 0.02,
+        speed: 2 + Math.random()*nivel,
+        size: 30,
         alive:true
     });
 }
 
-// EXPLOSIÓN
+// 💥 EXPLOSIÓN
 function createExplosion(x,y){
     for(let i=0;i<20;i++){
         particles.push({
@@ -127,6 +139,7 @@ function update(){
 
     if(!gameOver){
 
+        // GRAVEDAD
         player.velY += player.gravity;
         player.y += player.velY;
 
@@ -135,7 +148,8 @@ function update(){
             player.y = canvas.height - player.height;
         }
 
-        if(frame % 80 === 0){
+        // GENERAR METEORITOS
+        if(frame % dificultad === 0){
             createMeteor();
         }
 
@@ -146,15 +160,38 @@ function update(){
             m.x -= m.speed;
             m.rotation += m.rotationSpeed;
 
+            // COLISIÓN
             if(
                 player.x < m.x + m.size &&
                 player.x + player.width > m.x - m.size &&
                 player.y < m.y + m.size &&
                 player.y + player.height > m.y - m.size
             ){
-                gameOver = true;
-                createExplosion(player.x, player.y);
+                if(m.alive && !invencible){
+                    m.alive = false;
+                    createExplosion(player.x, player.y);
+                    vidas--;
+
+                    invencible = true;
+                    tiempoInvencible = 60;
+
+                    if(vidas <= 0){
+                        gameOver = true;
+                    }
+                }
             }
+
+            // SCORE
+            if(m.x < player.x && m.alive){
+                score++;
+                m.alive = false;
+            }
+        }
+
+        // SUBIR NIVEL
+        if(score > nivel * 10 && nivel < 5){
+            nivel++;
+            dificultad -= 10;
         }
 
         // BALAS
@@ -178,6 +215,14 @@ function update(){
                     score += 2;
                 }
             }
+        }
+    }
+
+    // INVENCIBILIDAD TIMER
+    if(invencible){
+        tiempoInvencible--;
+        if(tiempoInvencible <= 0){
+            invencible = false;
         }
     }
 
@@ -215,9 +260,8 @@ function drawMeteor(m){
     ctx.closePath();
 
     let gradient = ctx.createRadialGradient(0,0,5,0,0,40);
-    gradient.addColorStop(0, "#5a4a3f");
-    gradient.addColorStop(0.5, "#3b2f2f");
-    gradient.addColorStop(1, "#1a1a1a");
+    gradient.addColorStop(0, "#6d4c41");
+    gradient.addColorStop(1, "#1c1c1c");
 
     ctx.fillStyle = gradient;
     ctx.fill();
@@ -225,68 +269,30 @@ function drawMeteor(m){
     ctx.restore();
 }
 
-// 🚀 DIBUJAR NAVE REALISTA
+// 🚀 NAVE
 function drawPlayer(){
-    let x = player.x;
-    let y = player.y;
-    let w = player.width;
-    let h = player.height;
 
-    // CUERPO
-    let grad = ctx.createLinearGradient(x, y, x + w, y + h);
-    grad.addColorStop(0, "#00e5ff");
-    grad.addColorStop(1, "#006064");
+    // PARPADEO
+    if(invencible && Math.floor(frame/5) % 2 === 0){
+        return;
+    }
 
-    ctx.fillStyle = grad;
+    let angle = player.velY * 0.05;
+
+    ctx.save();
+    ctx.translate(player.x + player.width/2, player.y + player.height/2);
+    ctx.rotate(angle);
+
+    ctx.fillStyle = "cyan";
     ctx.beginPath();
-    ctx.moveTo(x, y + h/2);
-    ctx.lineTo(x + w*0.7, y);
-    ctx.lineTo(x + w, y + h/2);
-    ctx.lineTo(x + w*0.7, y + h);
+    ctx.moveTo(-30, 0);
+    ctx.lineTo(0, -20);
+    ctx.lineTo(30, 0);
+    ctx.lineTo(0, 20);
     ctx.closePath();
     ctx.fill();
 
-    // ALAS
-    ctx.fillStyle = "#00bcd4";
-
-    ctx.beginPath();
-    ctx.moveTo(x + 10, y + 5);
-    ctx.lineTo(x - 15, y - 5);
-    ctx.lineTo(x + 15, y + 15);
-    ctx.closePath();
-    ctx.fill();
-
-    ctx.beginPath();
-    ctx.moveTo(x + 10, y + h - 5);
-    ctx.lineTo(x - 15, y + h + 5);
-    ctx.lineTo(x + 15, y + h - 15);
-    ctx.closePath();
-    ctx.fill();
-
-    // CABINA
-    ctx.fillStyle = "#81d4fa";
-    ctx.beginPath();
-    ctx.arc(x + w*0.6, y + h/2, 6, 0, Math.PI*2);
-    ctx.fill();
-
-    // SOMBRA
-    ctx.fillStyle = "rgba(0,0,0,0.3)";
-    ctx.fillRect(x + 5, y + 5, w*0.5, h-10);
-
-    // 🔥 PROPULSIÓN
-    let flameSize = 10 + Math.random()*5;
-
-    let flameGrad = ctx.createLinearGradient(x-20, y, x, y+h);
-    flameGrad.addColorStop(0, "yellow");
-    flameGrad.addColorStop(1, "red");
-
-    ctx.fillStyle = flameGrad;
-    ctx.beginPath();
-    ctx.moveTo(x, y + h/2);
-    ctx.lineTo(x - flameSize, y + h/2 - 5);
-    ctx.lineTo(x - flameSize, y + h/2 + 5);
-    ctx.closePath();
-    ctx.fill();
+    ctx.restore();
 }
 
 // DRAW
@@ -303,12 +309,6 @@ function draw(){
         drawPlayer();
     }
 
-    // BALAS
-    ctx.fillStyle = "yellow";
-    for(let b of bullets){
-        ctx.fillRect(b.x, b.y, 5, 3);
-    }
-
     // METEORITOS
     for(let m of meteors){
         drawMeteor(m);
@@ -320,16 +320,21 @@ function draw(){
         ctx.fillRect(p.x, p.y, 3, 3);
     }
 
-    // SCORE
+    // ❤️ HUD CON TEXTO
     ctx.fillStyle = "white";
-    ctx.font = "20px Arial";
-    ctx.fillText("Score: " + score, 10, 30);
+    ctx.font = "18px Arial";
+
+    let corazones = "";
+    for(let i=0;i<vidas;i++){
+        corazones += "❤️ ";
+    }
+
+    ctx.fillText("Score: " + score + " | Vidas: " + corazones, 10, 25);
+    ctx.fillText("Nivel: " + nivel, 10, 50);
 
     if(gameOver){
         ctx.font = "40px Arial";
         ctx.fillText("GAME OVER", 250, 180);
-        ctx.font = "20px Arial";
-        ctx.fillText("Presiona R para reiniciar", 280, 220);
     }
 }
 
