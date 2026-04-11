@@ -36,6 +36,7 @@ button{
     border-radius:10px;
 }
 
+/* CANVAS RESPONSIVE */
 canvas{
     border:3px solid white;
     background: radial-gradient(circle, #000 40%, #020024 100%);
@@ -50,9 +51,7 @@ canvas{
 
 <div id="menu">
     <h1>🚀 Nave vs Meteoritos ☄️</h1>
-    <p><b>Reglas del juego:</b></p>
     <p>ESPACIO = subir | F = disparar | R = reiniciar</p>
-    <br>
     <button onclick="iniciarJuego()">▶️ Iniciar Juego</button>
 </div>
 
@@ -64,7 +63,7 @@ function iniciarJuego(){
     document.getElementById("gameCanvas").style.display = "block";
 }
 
-// CANVAS RESPONSIVE
+// 🌐 CANVAS RESPONSIVE
 const canvas = document.getElementById("gameCanvas");
 const ctx = canvas.getContext("2d");
 
@@ -75,7 +74,7 @@ function resizeCanvas(){
 window.addEventListener("resize", resizeCanvas);
 resizeCanvas();
 
-// 🚀 NAVE
+// 🚀 NAVE ORIGINAL (SIN CAMBIOS)
 const player = {
     x: 100,
     y: 200,
@@ -99,7 +98,6 @@ let frame = 0;
 let score = 0;
 let gameOver = false;
 
-// INVENCIBILIDAD
 let invencible = false;
 let tiempoInvencible = 0;
 
@@ -136,7 +134,7 @@ function resetGame(){
     invencible = false;
 }
 
-// ☄️ METEORITOS
+// ☄️ METEORITOS (ORIGINAL)
 function createMeteor(){
     let points = [];
     let sides = 7 + Math.floor(Math.random()*5);
@@ -203,7 +201,7 @@ function update(){
                 player.y < m.y + m.size &&
                 player.y + player.height > m.y - m.size
             ){
-                if(m.alive && !invencible){
+                if(!invencible){
                     m.alive = false;
                     createExplosion(player.x, player.y);
                     vidas--;
@@ -225,7 +223,6 @@ function update(){
 
         if(score > nivel * 10 && nivel < 5){
             nivel++;
-
             if(nivel === 2) dificultad = 60;
             if(nivel === 3) dificultad = 45;
             if(nivel === 4) dificultad = 30;
@@ -261,19 +258,128 @@ function update(){
         }
     }
 
-    for(let p of particles){
+    particles = particles.filter(p=>{
         p.x += p.vx;
         p.y += p.vy;
         p.life--;
-    }
-
-    particles = particles.filter(p => p.life > 0);
+        return p.life > 0;
+    });
 }
 
-// ⭐ ESTRELLAS RESPONSIVE
+// ☄️ METEORITOS
+function drawMeteor(m){
+    if(!m.alive) return;
+
+    ctx.save();
+    ctx.translate(m.x, m.y);
+    ctx.rotate(m.rotation);
+
+    ctx.beginPath();
+    ctx.moveTo(
+        Math.cos(m.points[0].angle) * m.points[0].radius,
+        Math.sin(m.points[0].angle) * m.points[0].radius
+    );
+
+    for(let p of m.points){
+        ctx.lineTo(
+            Math.cos(p.angle) * p.radius,
+            Math.sin(p.angle) * p.radius
+        );
+    }
+
+    ctx.closePath();
+
+    let gradient = ctx.createRadialGradient(0,0,5,0,0,40);
+    gradient.addColorStop(0, "#6d4c41");
+    gradient.addColorStop(1, "#1c1c1c");
+
+    ctx.fillStyle = gradient;
+    ctx.fill();
+
+    ctx.restore();
+}
+
+// 🚀 NAVE (ARREGLADA SIN CAMBIAR DISEÑO)
+function drawPlayer(){
+
+    if(invencible && Math.floor(frame/5)%2===0) return;
+
+    let angle = player.velY * 0.05;
+
+    ctx.save();
+    ctx.translate(player.x + player.width/2, player.y + player.height/2);
+    ctx.rotate(angle);
+
+    let grad = ctx.createLinearGradient(-30,0,30,0);
+    grad.addColorStop(0,"#00e5ff");
+    grad.addColorStop(1,"#006064");
+
+    ctx.fillStyle = grad;
+
+    ctx.beginPath();
+    ctx.moveTo(-30,0);
+    ctx.lineTo(0,-20);
+    ctx.lineTo(30,0);
+    ctx.lineTo(0,20);
+    ctx.closePath();
+    ctx.fill();
+
+    ctx.fillStyle = "#b3e5fc";
+    ctx.beginPath();
+    ctx.arc(5, 0, 8, 0, Math.PI*2);
+    ctx.fill();
+
+    ctx.fillStyle = "#00acc1";
+    ctx.beginPath();
+    ctx.moveTo(-10,-5);
+    ctx.lineTo(-28,-18);
+    ctx.lineTo(-5,-10);
+    ctx.closePath();
+    ctx.fill();
+
+    ctx.beginPath();
+    ctx.moveTo(-10,5);
+    ctx.lineTo(-28,18);
+    ctx.lineTo(-5,10);
+    ctx.closePath();
+    ctx.fill();
+
+    ctx.fillStyle = "#004d40";
+    ctx.fillRect(-10,-3,20,6);
+
+    if(player.velY < 0){
+        ctx.fillStyle = "orange";
+        ctx.beginPath();
+        ctx.moveTo(30,0);
+        ctx.lineTo(50,-6);
+        ctx.lineTo(50,6);
+        ctx.closePath();
+        ctx.fill();
+
+        ctx.fillStyle = "yellow";
+        ctx.beginPath();
+        ctx.moveTo(30,0);
+        ctx.lineTo(42,-3);
+        ctx.lineTo(42,3);
+        ctx.closePath();
+        ctx.fill();
+    }
+
+    ctx.restore();
+}
+
+// 🔫 BALAS
+function drawBullets(){
+    for(let b of bullets){
+        ctx.fillStyle="red";
+        ctx.fillRect(b.x,b.y,10,3);
+    }
+}
+
+// ⭐ ESTRELLAS
 function drawStars(){
     for(let i=0;i<40;i++){
-        ctx.fillStyle = "white";
+        ctx.fillStyle="white";
         ctx.fillRect(
             Math.random()*canvas.width,
             Math.random()*canvas.height,
@@ -282,65 +388,30 @@ function drawStars(){
     }
 }
 
-// 🚀 NAVE
-function drawPlayer(){
-
-    if(invencible && Math.floor(frame/5) % 2 === 0){
-        return;
-    }
-
-    ctx.fillStyle = "#00e5ff";
-    ctx.fillRect(player.x, player.y, player.width, player.height);
-}
-
-// 🔫 BALAS
-function drawBullets(){
-    for(let b of bullets){
-        ctx.fillStyle = "red";
-        ctx.fillRect(b.x, b.y, 10, 3);
-    }
-}
-
-// ☄️ METEORITOS
-function drawMeteor(m){
-    if(!m.alive) return;
-
-    ctx.fillStyle = "gray";
-    ctx.beginPath();
-    ctx.arc(m.x, m.y, m.size, 0, Math.PI*2);
-    ctx.fill();
-}
-
 // DRAW
 function draw(){
     ctx.clearRect(0,0,canvas.width,canvas.height);
 
     drawStars();
 
-    if(!gameOver){
-        drawPlayer();
-    }
+    if(!gameOver) drawPlayer();
 
-    for(let m of meteors){
-        drawMeteor(m);
-    }
+    for(let m of meteors) drawMeteor(m);
 
     drawBullets();
 
-    ctx.fillStyle = "white";
-    ctx.font = "18px Arial";
+    ctx.fillStyle="white";
+    ctx.font="18px Arial";
 
-    let corazones = "";
-    for(let i=0;i<vidas;i++){
-        corazones += "❤️ ";
-    }
+    let corazones="";
+    for(let i=0;i<vidas;i++) corazones+="❤️ ";
 
-    ctx.fillText("Score: " + score + " | Vidas: " + corazones, 10, 25);
-    ctx.fillText("Nivel: " + nivel, 10, 50);
+    ctx.fillText("Score: "+score+" | Vidas: "+corazones,10,25);
+    ctx.fillText("Nivel: "+nivel,10,50);
 
     if(gameOver){
-        ctx.font = "40px Arial";
-        ctx.fillText("GAME OVER", canvas.width/2 - 100, canvas.height/2);
+        ctx.font="40px Arial";
+        ctx.fillText("GAME OVER",canvas.width/2-100,canvas.height/2);
     }
 }
 
