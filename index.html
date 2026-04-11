@@ -12,7 +12,6 @@ body{
     font-family:Arial;
 }
 
-/* 🔥 SOLO AGREGADO */
 #menu{
     position:fixed;
     width:100%;
@@ -37,7 +36,7 @@ button{
 canvas{
     border:3px solid white;
     background: radial-gradient(circle, #000 40%, #020024 100%);
-    display:none; /* 🔥 oculto al inicio */
+    display:none;
     margin:20px auto;
 }
 </style>
@@ -45,7 +44,6 @@ canvas{
 </head>
 <body>
 
-<!-- 🔥 SOLO AGREGADO -->
 <div id="menu">
     <h1>🚀 Nave vs Meteoritos ☄️</h1>
     <p><b>Reglas del juego:</b></p>
@@ -59,7 +57,6 @@ canvas{
 
 <canvas id="gameCanvas"></canvas>
 
-<!-- 🔥 SOLO AGREGADO -->
 <script>
 function iniciarJuego(){
     document.getElementById("menu").style.display = "none";
@@ -193,10 +190,11 @@ function update(){
         for(let m of meteors){
             if(!m.alive) continue;
 
-            m.x -= m.speed;
+            // 🔥 MÁS DIFÍCIL SIN ROMPER NADA
+            m.x -= m.speed + (nivel * 0.5);
+
             m.rotation += m.rotationSpeed;
 
-            // COLISIÓN
             if(
                 player.x < m.x + m.size &&
                 player.x + player.width > m.x - m.size &&
@@ -223,16 +221,20 @@ function update(){
             }
         }
 
+        // 🔥 PROGRESIÓN CORRECTA
         if(score > nivel * 10 && nivel < 5){
             nivel++;
-            dificultad -= 10;
+
+            if(nivel === 2) dificultad = 60;
+            if(nivel === 3) dificultad = 45;
+            if(nivel === 4) dificultad = 30;
+            if(nivel === 5) dificultad = 15;
         }
 
         for(let b of bullets){
             b.x += b.speed;
         }
 
-        // COLISIÓN BALAS
         for(let b of bullets){
             for(let m of meteors){
                 if(!m.alive) continue;
@@ -300,9 +302,8 @@ function drawMeteor(m){
     ctx.restore();
 }
 
-// 🚀 NAVE MEJORADA
+// 🚀 NAVE
 function drawPlayer(){
-
     if(invencible && Math.floor(frame/5) % 2 === 0){
         return;
     }
@@ -313,11 +314,7 @@ function drawPlayer(){
     ctx.translate(player.x + player.width/2, player.y + player.height/2);
     ctx.rotate(angle);
 
-    let grad = ctx.createLinearGradient(-30, 0, 30, 0);
-    grad.addColorStop(0, "#00e5ff");
-    grad.addColorStop(1, "#006064");
-
-    ctx.fillStyle = grad;
+    ctx.fillStyle = "cyan";
     ctx.beginPath();
     ctx.moveTo(-30, 0);
     ctx.lineTo(0, -20);
@@ -326,62 +323,14 @@ function drawPlayer(){
     ctx.closePath();
     ctx.fill();
 
-    ctx.fillStyle = "#b3e5fc";
-    ctx.beginPath();
-    ctx.arc(5, 0, 8, 0, Math.PI * 2);
-    ctx.fill();
-
-    ctx.fillStyle = "#00acc1";
-
-    ctx.beginPath();
-    ctx.moveTo(-10, -5);
-    ctx.lineTo(-25, -15);
-    ctx.lineTo(-5, -10);
-    ctx.closePath();
-    ctx.fill();
-
-    ctx.beginPath();
-    ctx.moveTo(-10, 5);
-    ctx.lineTo(-25, 15);
-    ctx.lineTo(-5, 10);
-    ctx.closePath();
-    ctx.fill();
-
-    if(player.velY < 0){
-        ctx.fillStyle = "orange";
-        ctx.beginPath();
-        ctx.moveTo(30, 0);
-        ctx.lineTo(45, -5);
-        ctx.lineTo(45, 5);
-        ctx.closePath();
-        ctx.fill();
-
-        ctx.fillStyle = "yellow";
-        ctx.beginPath();
-        ctx.moveTo(30, 0);
-        ctx.lineTo(38, -3);
-        ctx.lineTo(38, 3);
-        ctx.closePath();
-        ctx.fill();
-    }
-
     ctx.restore();
 }
 
-// 🔫 BALAS VISUALES
+// 🔫 BALAS
 function drawBullets(){
     for(let b of bullets){
-
-        ctx.shadowColor = "red";
-        ctx.shadowBlur = 10;
-
         ctx.fillStyle = "red";
         ctx.fillRect(b.x, b.y, 10, 3);
-
-        ctx.fillStyle = "yellow";
-        ctx.fillRect(b.x, b.y+1, 10, 1);
-
-        ctx.shadowBlur = 0;
     }
 }
 
