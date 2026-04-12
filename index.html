@@ -44,6 +44,33 @@ canvas{
     width:100vw;
     height:100vh;
 }
+
+/* 📱 CONTROLES MÓVILES */
+#mobileControls{
+    position:fixed;
+    bottom:20px;
+    width:100%;
+    display:none;
+    justify-content:space-around;
+    z-index:20;
+}
+
+.mobile-btn{
+    background:rgba(0,255,255,0.7);
+    border:none;
+    padding:20px;
+    font-size:18px;
+    border-radius:50%;
+    width:70px;
+    height:70px;
+}
+
+/* Mostrar solo en pantallas pequeñas */
+@media (max-width: 768px){
+    #mobileControls{
+        display:flex;
+    }
+}
 </style>
 
 </head>
@@ -56,6 +83,13 @@ canvas{
 </div>
 
 <canvas id="gameCanvas"></canvas>
+
+<!-- 📱 BOTONES -->
+<div id="mobileControls">
+    <button class="mobile-btn" id="btnUp">⬆️</button>
+    <button class="mobile-btn" id="btnShoot">🔥</button>
+    <button class="mobile-btn" id="btnReset">🔄</button>
+</div>
 
 <script>
 function iniciarJuego(){
@@ -101,7 +135,7 @@ let gameOver = false;
 let invencible = false;
 let tiempoInvencible = 0;
 
-// CONTROLES
+// CONTROLES TECLADO
 document.addEventListener("keydown", function(e){
     if(e.code === "Space"){
         player.velY = player.thrust;
@@ -118,6 +152,23 @@ document.addEventListener("keydown", function(e){
     if(e.key.toLowerCase() === "r"){
         resetGame();
     }
+});
+
+/* 📱 CONTROLES TÁCTILES (AGREGADO) */
+document.getElementById("btnUp").addEventListener("touchstart", ()=>{
+    player.velY = player.thrust;
+});
+
+document.getElementById("btnShoot").addEventListener("touchstart", ()=>{
+    bullets.push({
+        x: player.x + 60,
+        y: player.y + player.height/2,
+        speed: 8
+    });
+});
+
+document.getElementById("btnReset").addEventListener("touchstart", ()=>{
+    resetGame();
 });
 
 // RESET
@@ -299,7 +350,7 @@ function drawMeteor(m){
     ctx.restore();
 }
 
-// 🚀 NAVE (ARREGLADA SIN CAMBIAR DISEÑO)
+// 🚀 NAVE
 function drawPlayer(){
 
     if(invencible && Math.floor(frame/5)%2===0) return;
@@ -329,42 +380,6 @@ function drawPlayer(){
     ctx.arc(5, 0, 8, 0, Math.PI*2);
     ctx.fill();
 
-    ctx.fillStyle = "#00acc1";
-    ctx.beginPath();
-    ctx.moveTo(-10,-5);
-    ctx.lineTo(-28,-18);
-    ctx.lineTo(-5,-10);
-    ctx.closePath();
-    ctx.fill();
-
-    ctx.beginPath();
-    ctx.moveTo(-10,5);
-    ctx.lineTo(-28,18);
-    ctx.lineTo(-5,10);
-    ctx.closePath();
-    ctx.fill();
-
-    ctx.fillStyle = "#004d40";
-    ctx.fillRect(-10,-3,20,6);
-
-    if(player.velY < 0){
-        ctx.fillStyle = "orange";
-        ctx.beginPath();
-        ctx.moveTo(30,0);
-        ctx.lineTo(50,-6);
-        ctx.lineTo(50,6);
-        ctx.closePath();
-        ctx.fill();
-
-        ctx.fillStyle = "yellow";
-        ctx.beginPath();
-        ctx.moveTo(30,0);
-        ctx.lineTo(42,-3);
-        ctx.lineTo(42,3);
-        ctx.closePath();
-        ctx.fill();
-    }
-
     ctx.restore();
 }
 
@@ -376,23 +391,9 @@ function drawBullets(){
     }
 }
 
-// ⭐ ESTRELLAS
-function drawStars(){
-    for(let i=0;i<40;i++){
-        ctx.fillStyle="white";
-        ctx.fillRect(
-            Math.random()*canvas.width,
-            Math.random()*canvas.height,
-            2,2
-        );
-    }
-}
-
 // DRAW
 function draw(){
     ctx.clearRect(0,0,canvas.width,canvas.height);
-
-    drawStars();
 
     if(!gameOver) drawPlayer();
 
