@@ -11,3 +11,30 @@ canvas{
     display:block;
     margin:20px auto;
 }
+
+/* 📱 CONTROLES MÓVILES (AGREGADO) */
+#mobileControls{
+    position:fixed;
+    bottom:20px;
+    width:100%;
+    display:none;
+    justify-content:space-around;
+    z-index:20;
+}
+
+.mobile-btn{
+    border:none;
+    border-radius:50%;
+    width:70px;
+    height:70px;
+    font-size:18px;
+    background:rgba(0,255,255,0.7);
+    touch-action: manipulation;
+}
+
+/* SOLO CELULAR */
+@media (max-width:768px){
+    #mobileControls{
+        display:flex;
+    }
+}

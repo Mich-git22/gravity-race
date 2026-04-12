@@ -22,13 +22,35 @@ let frame = 0;
 let score = 0;
 let gameOver = false;
 
-// CONTROLES
+// CONTROLES TECLADO
 document.addEventListener("keydown", (e) => {
     if (e.code === "Space" && player.grounded) {
         player.velY = player.jump;
         player.grounded = false;
     }
 });
+
+/* 📱 CONTROLES MÓVILES (AGREGADO) */
+const btnUp = document.getElementById("btnUp");
+
+if(btnUp){
+    // Funciona en la mayoría de dispositivos
+    btnUp.addEventListener("pointerdown", (e) => {
+        e.preventDefault();
+        if (player.grounded) {
+            player.velY = player.jump;
+            player.grounded = false;
+        }
+    });
+
+    // Refuerzo para celulares
+    btnUp.addEventListener("touchstart", () => {
+        if (player.grounded) {
+            player.velY = player.jump;
+            player.grounded = false;
+        }
+    });
+}
 
 // CREAR OBSTÁCULOS
 function createObstacle() {
