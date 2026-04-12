@@ -1,27 +1,32 @@
 const canvas = document.getElementById("gameCanvas");
 const ctx = canvas.getContext("2d");
 
-canvas.width = 800;
-canvas.height = 400;
-
-/* 🔥 AJUSTE A PANTALLA */
+/* =========================
+   🔥 AJUSTE RESPONSIVE REAL
+========================= */
 function ajustarPantalla(){
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
 }
+
 ajustarPantalla();
 window.addEventListener("resize", ajustarPantalla);
+window.addEventListener("orientationchange", () => {
+    setTimeout(ajustarPantalla, 100);
+});
 
-/* 🔒 BLOQUEO ZOOM Y GESTOS */
-document.addEventListener("touchmove", function(e){
-    if(e.target.tagName === "CANVAS"){
-        e.preventDefault();
-    }
-}, { passive:false });
-
+/* =========================
+   🔒 BLOQUEO ZOOM REAL
+========================= */
 document.addEventListener("gesturestart", e => e.preventDefault());
 document.addEventListener("gesturechange", e => e.preventDefault());
 document.addEventListener("gestureend", e => e.preventDefault());
+
+document.addEventListener("touchmove", function(e){
+    if (e.target.tagName === "CANVAS") {
+        e.preventDefault();
+    }
+}, { passive:false });
 
 /* 🚫 DOBLE TAP ZOOM */
 let lastTouch = 0;
@@ -34,9 +39,8 @@ document.addEventListener("touchend", function (e) {
 }, false);
 
 /* =========================
-   JUGADOR
+   🚀 JUGADOR
 ========================= */
-
 const player = {
     x: 100,
     y: 300,
@@ -51,7 +55,6 @@ const player = {
 /* =========================
    OBSTÁCULOS
 ========================= */
-
 let obstacles = [];
 let frame = 0;
 let score = 0;
@@ -60,7 +63,6 @@ let gameOver = false;
 /* =========================
    CONTROLES TECLADO
 ========================= */
-
 document.addEventListener("keydown", (e) => {
     if (e.code === "Space") {
         saltar();
@@ -68,9 +70,8 @@ document.addEventListener("keydown", (e) => {
 });
 
 /* =========================
-   SALTO
+   🔥 SALTO
 ========================= */
-
 function saltar(){
     if (player.grounded) {
         player.velY = player.jump;
@@ -79,23 +80,16 @@ function saltar(){
 }
 
 /* =========================
-   📱 CONTROLES TOUCH
+   📱 TOUCH MEJORADO
 ========================= */
-
-canvas.addEventListener("touchstart", function(e){
+canvas.addEventListener("pointerdown", function(e){
     e.preventDefault();
     saltar();
 }, { passive:false });
 
-canvas.addEventListener("pointerdown", function(e){
-    e.preventDefault();
-    saltar();
-});
-
 /* =========================
    CREAR OBSTÁCULOS
 ========================= */
-
 function createObstacle() {
     obstacles.push({
         x: canvas.width,
@@ -108,7 +102,6 @@ function createObstacle() {
 /* =========================
    UPDATE
 ========================= */
-
 function update() {
     if (gameOver) return;
 
@@ -153,26 +146,21 @@ function update() {
 /* =========================
    DRAW
 ========================= */
-
 function draw() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    /* JUGADOR */
     ctx.fillStyle = "cyan";
     ctx.fillRect(player.x, player.y, player.width, player.height);
 
-    /* OBSTÁCULOS */
     ctx.fillStyle = "red";
     obstacles.forEach(obs => {
         ctx.fillRect(obs.x, obs.y, obs.width, obs.height);
     });
 
-    /* SCORE */
     ctx.fillStyle = "white";
     ctx.font = "20px Arial";
     ctx.fillText("Score: " + score, 10, 30);
 
-    /* GAME OVER */
     if (gameOver) {
         ctx.font = "40px Arial";
         ctx.fillText("GAME OVER", canvas.width/2 - 120, canvas.height/2);
@@ -182,7 +170,6 @@ function draw() {
 /* =========================
    LOOP
 ========================= */
-
 function gameLoop() {
     update();
     draw();
