@@ -5,21 +5,34 @@ body{
     font-family:Arial;
     margin:0;
     overflow:hidden;
+    touch-action:none;
 }
 
+/* 🔒 BLOQUEO GLOBAL DE ZOOM */
 html, body{
     touch-action:none;
     overscroll-behavior:none;
+    -webkit-user-select:none;
+    user-select:none;
+    -webkit-touch-callout:none;
 }
 
+/* 🔥 CANVAS FULL SCREEN */
 canvas{
     border:3px solid white;
     background:#222;
     display:block;
-    margin:20px auto;
+    width:100vw;
+    height:100vh;
+    margin:0;
+    touch-action:none;
+
+    /* 🔒 extra seguridad anti zoom */
+    -ms-touch-action: none;
+    overscroll-behavior: none;
 }
 
-/* 📱 CONTROLES MÓVILES */
+/* 📱 CONTROLES MÓVIL (si los usas después) */
 #mobileControls{
     position:fixed;
     bottom:20px;
@@ -28,7 +41,8 @@ canvas{
     display:none;
     justify-content:space-around;
     z-index:20;
-    pointer-events:auto;
+
+    pointer-events:none;
 }
 
 .mobile-btn{
@@ -38,12 +52,15 @@ canvas{
     height:70px;
     font-size:18px;
     background:rgba(0,255,255,0.7);
+
     touch-action: manipulation;
     user-select:none;
     -webkit-user-select:none;
+
+    pointer-events:auto;
 }
 
-/* SOLO CELULAR */
+/* 📱 SOLO CELULAR */
 @media (max-width:768px){
     #mobileControls{
         display:flex;

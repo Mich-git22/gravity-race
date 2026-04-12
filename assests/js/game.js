@@ -4,18 +4,26 @@ const ctx = canvas.getContext("2d");
 canvas.width = 800;
 canvas.height = 400;
 
-// 🚫 BLOQUEAR ZOOM Y GESTOS (AGREGADO)
-document.addEventListener("gesturestart", function (e) {
-    e.preventDefault();
-});
-document.addEventListener("gesturechange", function (e) {
-    e.preventDefault();
-});
-document.addEventListener("gestureend", function (e) {
-    e.preventDefault();
-});
+/* 🔥 AJUSTE A PANTALLA */
+function ajustarPantalla(){
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+}
+ajustarPantalla();
+window.addEventListener("resize", ajustarPantalla);
 
-// 🚫 BLOQUEAR DOBLE TAP
+/* 🔒 BLOQUEO ZOOM Y GESTOS */
+document.addEventListener("touchmove", function(e){
+    if(e.target.tagName === "CANVAS"){
+        e.preventDefault();
+    }
+}, { passive:false });
+
+document.addEventListener("gesturestart", e => e.preventDefault());
+document.addEventListener("gesturechange", e => e.preventDefault());
+document.addEventListener("gestureend", e => e.preventDefault());
+
+/* 🚫 DOBLE TAP ZOOM */
 let lastTouch = 0;
 document.addEventListener("touchend", function (e) {
     let now = Date.now();
@@ -25,7 +33,10 @@ document.addEventListener("touchend", function (e) {
     lastTouch = now;
 }, false);
 
-// JUGADOR
+/* =========================
+   JUGADOR
+========================= */
+
 const player = {
     x: 100,
     y: 300,
@@ -37,20 +48,29 @@ const player = {
     grounded: true
 };
 
-// OBSTÁCULOS
+/* =========================
+   OBSTÁCULOS
+========================= */
+
 let obstacles = [];
 let frame = 0;
 let score = 0;
 let gameOver = false;
 
-// TECLADO
+/* =========================
+   CONTROLES TECLADO
+========================= */
+
 document.addEventListener("keydown", (e) => {
-    if (e.code === "Space" && player.grounded) {
+    if (e.code === "Space") {
         saltar();
     }
 });
 
-// 🔥 FUNCIÓN DE SALTO
+/* =========================
+   SALTO
+========================= */
+
 function saltar(){
     if (player.grounded) {
         player.velY = player.jump;
@@ -58,38 +78,37 @@ function saltar(){
     }
 }
 
-/* 📱 TOUCH REAL */
+/* =========================
+   📱 CONTROLES TOUCH
+========================= */
 
-// tocar canvas
-canvas.addEventListener("pointerdown", saltar);
-
-// fallback
-canvas.addEventListener("touchstart", (e)=>{
+canvas.addEventListener("touchstart", function(e){
     e.preventDefault();
     saltar();
-}, {passive:false});
+}, { passive:false });
 
-// botón ⬆️
-const btnUp = document.getElementById("btnUp");
+canvas.addEventListener("pointerdown", function(e){
+    e.preventDefault();
+    saltar();
+});
 
-if(btnUp){
-    btnUp.addEventListener("pointerdown", (e)=>{
-        e.preventDefault();
-        saltar();
-    });
-}
+/* =========================
+   CREAR OBSTÁCULOS
+========================= */
 
-// CREAR OBSTÁCULOS
 function createObstacle() {
     obstacles.push({
         x: canvas.width,
-        y: 320,
+        y: canvas.height - 80,
         width: 30,
         height: 80
     });
 }
 
-// UPDATE
+/* =========================
+   UPDATE
+========================= */
+
 function update() {
     if (gameOver) return;
 
@@ -131,29 +150,39 @@ function update() {
     });
 }
 
-// DRAW
+/* =========================
+   DRAW
+========================= */
+
 function draw() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
+    /* JUGADOR */
     ctx.fillStyle = "cyan";
     ctx.fillRect(player.x, player.y, player.width, player.height);
 
+    /* OBSTÁCULOS */
     ctx.fillStyle = "red";
     obstacles.forEach(obs => {
         ctx.fillRect(obs.x, obs.y, obs.width, obs.height);
     });
 
+    /* SCORE */
     ctx.fillStyle = "white";
     ctx.font = "20px Arial";
     ctx.fillText("Score: " + score, 10, 30);
 
+    /* GAME OVER */
     if (gameOver) {
         ctx.font = "40px Arial";
-        ctx.fillText("GAME OVER", 280, 200);
+        ctx.fillText("GAME OVER", canvas.width/2 - 120, canvas.height/2);
     }
 }
 
-// LOOP
+/* =========================
+   LOOP
+========================= */
+
 function gameLoop() {
     update();
     draw();
