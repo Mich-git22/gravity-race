@@ -3,6 +3,13 @@ body{
     color:white;
     text-align:center;
     font-family:Arial;
+    margin:0;
+    overflow:hidden;
+}
+
+html, body{
+    touch-action:none;
+    overscroll-behavior:none;
 }
 
 canvas{
@@ -12,14 +19,16 @@ canvas{
     margin:20px auto;
 }
 
-/* 📱 CONTROLES MÓVILES (AGREGADO) */
+/* 📱 CONTROLES MÓVILES */
 #mobileControls{
     position:fixed;
     bottom:20px;
+    left:0;
     width:100%;
     display:none;
     justify-content:space-around;
     z-index:20;
+    pointer-events:auto;
 }
 
 .mobile-btn{
@@ -30,6 +39,8 @@ canvas{
     font-size:18px;
     background:rgba(0,255,255,0.7);
     touch-action: manipulation;
+    user-select:none;
+    -webkit-user-select:none;
 }
 
 /* SOLO CELULAR */

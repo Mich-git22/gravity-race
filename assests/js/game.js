@@ -4,6 +4,27 @@ const ctx = canvas.getContext("2d");
 canvas.width = 800;
 canvas.height = 400;
 
+// 🚫 BLOQUEAR ZOOM Y GESTOS (AGREGADO)
+document.addEventListener("gesturestart", function (e) {
+    e.preventDefault();
+});
+document.addEventListener("gesturechange", function (e) {
+    e.preventDefault();
+});
+document.addEventListener("gestureend", function (e) {
+    e.preventDefault();
+});
+
+// 🚫 BLOQUEAR DOBLE TAP
+let lastTouch = 0;
+document.addEventListener("touchend", function (e) {
+    let now = Date.now();
+    if (now - lastTouch <= 300) {
+        e.preventDefault();
+    }
+    lastTouch = now;
+}, false);
+
 // JUGADOR
 const player = {
     x: 100,
@@ -22,33 +43,39 @@ let frame = 0;
 let score = 0;
 let gameOver = false;
 
-// CONTROLES TECLADO
+// TECLADO
 document.addEventListener("keydown", (e) => {
     if (e.code === "Space" && player.grounded) {
-        player.velY = player.jump;
-        player.grounded = false;
+        saltar();
     }
 });
 
-/* 📱 CONTROLES MÓVILES (AGREGADO) */
+// 🔥 FUNCIÓN DE SALTO
+function saltar(){
+    if (player.grounded) {
+        player.velY = player.jump;
+        player.grounded = false;
+    }
+}
+
+/* 📱 TOUCH REAL */
+
+// tocar canvas
+canvas.addEventListener("pointerdown", saltar);
+
+// fallback
+canvas.addEventListener("touchstart", (e)=>{
+    e.preventDefault();
+    saltar();
+}, {passive:false});
+
+// botón ⬆️
 const btnUp = document.getElementById("btnUp");
 
 if(btnUp){
-    // Funciona en la mayoría de dispositivos
-    btnUp.addEventListener("pointerdown", (e) => {
+    btnUp.addEventListener("pointerdown", (e)=>{
         e.preventDefault();
-        if (player.grounded) {
-            player.velY = player.jump;
-            player.grounded = false;
-        }
-    });
-
-    // Refuerzo para celulares
-    btnUp.addEventListener("touchstart", () => {
-        if (player.grounded) {
-            player.velY = player.jump;
-            player.grounded = false;
-        }
+        saltar();
     });
 }
 
@@ -62,24 +89,21 @@ function createObstacle() {
     });
 }
 
-// ACTUALIZAR
+// UPDATE
 function update() {
     if (gameOver) return;
 
     frame++;
 
-    // GRAVEDAD
     player.velY += player.gravity;
     player.y += player.velY;
 
-    // SUELO
     if (player.y + player.height >= canvas.height) {
         player.y = canvas.height - player.height;
         player.velY = 0;
         player.grounded = true;
     }
 
-    // OBSTÁCULOS
     if (frame % 100 === 0) {
         createObstacle();
     }
@@ -87,7 +111,6 @@ function update() {
     obstacles.forEach((obs, index) => {
         obs.x -= 5;
 
-        // COLISIÓN
         if (
             player.x < obs.x + obs.width &&
             player.x + player.width > obs.x &&
@@ -97,39 +120,33 @@ function update() {
             gameOver = true;
         }
 
-        // SUMAR PUNTOS
         if (obs.x + obs.width < player.x && !obs.passed) {
             score++;
             obs.passed = true;
         }
 
-        // ELIMINAR
         if (obs.x < -50) {
             obstacles.splice(index, 1);
         }
     });
 }
 
-// DIBUJAR
+// DRAW
 function draw() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    // JUGADOR
     ctx.fillStyle = "cyan";
     ctx.fillRect(player.x, player.y, player.width, player.height);
 
-    // OBSTÁCULOS
     ctx.fillStyle = "red";
     obstacles.forEach(obs => {
         ctx.fillRect(obs.x, obs.y, obs.width, obs.height);
     });
 
-    // SCORE
     ctx.fillStyle = "white";
     ctx.font = "20px Arial";
     ctx.fillText("Score: " + score, 10, 30);
 
-    // GAME OVER
     if (gameOver) {
         ctx.font = "40px Arial";
         ctx.fillText("GAME OVER", 280, 200);
