@@ -56,15 +56,16 @@ const player = {
 };
 
 /* =========================
-   OBSTÁCULOS
+   OBSTÁCULOS Y BALAS
 ========================= */
 let obstacles = [];
+let bullets = [];
 let frame = 0;
 let score = 0;
 let gameOver = false;
 
 /* =========================
-   🔥 BOTÓN REINICIO (AGREGADO)
+   🔥 BOTÓN REINICIO
 ========================= */
 const btnRestart = document.createElement("button");
 btnRestart.innerText = "🔄 Reiniciar";
@@ -95,6 +96,7 @@ btnRestart.addEventListener("pointerdown", (e)=>{
 ========================= */
 function resetGame(){
     obstacles = [];
+    bullets = [];
     frame = 0;
     score = 0;
     gameOver = false;
@@ -105,16 +107,22 @@ function resetGame(){
 }
 
 /* =========================
-   CONTROLES TECLADO
+   CONTROLES
 ========================= */
 document.addEventListener("keydown", (e) => {
+
     if (e.code === "Space") {
         saltar();
+    }
+
+    // 🔥 DISPARO CON F
+    if (e.key.toLowerCase() === "f") {
+        disparar();
     }
 });
 
 /* =========================
-   🔥 SALTO (TOUCH + TECLADO)
+   SALTO
 ========================= */
 function saltar(){
     if (player.grounded) {
@@ -124,7 +132,20 @@ function saltar(){
 }
 
 /* =========================
-   📱 TOCAR PANTALLA = SALTAR
+   🔥 DISPARO
+========================= */
+function disparar(){
+    bullets.push({
+        x: player.x + player.width,
+        y: player.y + player.height / 2,
+        width: 10,
+        height: 4,
+        speed: 8
+    });
+}
+
+/* =========================
+   TOQUE = SALTAR
 ========================= */
 canvas.addEventListener("pointerdown", function(e){
     e.preventDefault();
@@ -166,6 +187,9 @@ function update() {
 
     let speedFactor = canvas.width > canvas.height ? 7 : 5;
 
+    // =========================
+    // OBSTÁCULOS
+    // =========================
     obstacles.forEach((obs, index) => {
         obs.x -= speedFactor;
 
@@ -187,6 +211,32 @@ function update() {
             obstacles.splice(index, 1);
         }
     });
+
+    // =========================
+    // BALAS
+    // =========================
+    bullets.forEach((b, bi) => {
+        b.x += b.speed;
+
+        // eliminar si sale
+        if (b.x > canvas.width) {
+            bullets.splice(bi, 1);
+        }
+
+        // colisión bala vs obstáculo
+        obstacles.forEach((obs, oi) => {
+            if (
+                b.x < obs.x + obs.width &&
+                b.x + b.width > obs.x &&
+                b.y < obs.y + obs.height &&
+                b.y + b.height > obs.y
+            ) {
+                obstacles.splice(oi, 1);
+                bullets.splice(bi, 1);
+                score += 2;
+            }
+        });
+    });
 }
 
 /* =========================
@@ -201,6 +251,12 @@ function draw() {
     ctx.fillStyle = "red";
     obstacles.forEach(obs => {
         ctx.fillRect(obs.x, obs.y, obs.width, obs.height);
+    });
+
+    // 🔥 BALAS
+    ctx.fillStyle = "yellow";
+    bullets.forEach(b => {
+        ctx.fillRect(b.x, b.y, b.width, b.height);
     });
 
     ctx.fillStyle = "white";
