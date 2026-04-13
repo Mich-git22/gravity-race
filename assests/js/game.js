@@ -19,7 +19,49 @@ window.addEventListener("orientationchange", () => {
 });
 
 /* =========================
-   🔒 BLOQUEO ZOOM REAL
+   🔊 MÚSICA DE FONDO
+========================= */
+const music = new Audio("assests/music/musiic.mp3"); // 👈 CORREGIDO
+music.loop = true;
+music.volume = 1;
+
+let musicOn = false;
+
+const btnMusic = document.createElement("button");
+btnMusic.innerText = "🔊 Música OFF";
+
+Object.assign(btnMusic.style, {
+    position: "fixed",
+    bottom: "20px",
+    left: "20px",
+    zIndex: "999",
+    padding: "12px 18px",
+    fontSize: "16px",
+    border: "none",
+    borderRadius: "10px",
+    background: "lime",
+    color: "black",
+    fontWeight: "bold"
+});
+
+document.body.appendChild(btnMusic);
+
+btnMusic.addEventListener("pointerdown", (e) => {
+    e.preventDefault();
+
+    if (!musicOn) {
+        music.play().catch(()=>{});
+        musicOn = true;
+        btnMusic.innerText = "🔊 Música ON";
+    } else {
+        music.pause();
+        musicOn = false;
+        btnMusic.innerText = "🔊 Música OFF";
+    }
+});
+
+/* =========================
+   🔒 BLOQUEO ZOOM
 ========================= */
 document.addEventListener("gesturestart", e => e.preventDefault());
 document.addEventListener("gesturechange", e => e.preventDefault());
@@ -31,7 +73,6 @@ document.addEventListener("touchmove", function(e){
     }
 }, { passive:false });
 
-/* 🚫 DOBLE TAP ZOOM */
 let lastTouch = 0;
 document.addEventListener("touchend", function (e) {
     let now = Date.now();
@@ -56,7 +97,7 @@ const player = {
 };
 
 /* =========================
-   OBSTÁCULOS Y BALAS
+   VARIABLES
 ========================= */
 let obstacles = [];
 let bullets = [];
@@ -68,7 +109,7 @@ let gameOver = false;
    🔥 BOTÓN REINICIO
 ========================= */
 const btnRestart = document.createElement("button");
-btnRestart.innerText = "🔄 Reiniciar";
+btnRestart.innerText = "🔄";
 
 Object.assign(btnRestart.style, {
     position: "fixed",
@@ -115,7 +156,6 @@ document.addEventListener("keydown", (e) => {
         saltar();
     }
 
-    // 🔥 DISPARO CON F
     if (e.key.toLowerCase() === "f") {
         disparar();
     }
@@ -132,7 +172,7 @@ function saltar(){
 }
 
 /* =========================
-   🔥 DISPARO
+   DISPARO
 ========================= */
 function disparar(){
     bullets.push({
@@ -187,9 +227,7 @@ function update() {
 
     let speedFactor = canvas.width > canvas.height ? 7 : 5;
 
-    // =========================
-    // OBSTÁCULOS
-    // =========================
+    /* ================= OBSTÁCULOS ================= */
     obstacles.forEach((obs, index) => {
         obs.x -= speedFactor;
 
@@ -212,18 +250,12 @@ function update() {
         }
     });
 
-    // =========================
-    // BALAS
-    // =========================
+    /* ================= BALAS ================= */
     bullets.forEach((b, bi) => {
         b.x += b.speed;
 
-        // eliminar si sale
-        if (b.x > canvas.width) {
-            bullets.splice(bi, 1);
-        }
+        if (b.x > canvas.width) bullets.splice(bi, 1);
 
-        // colisión bala vs obstáculo
         obstacles.forEach((obs, oi) => {
             if (
                 b.x < obs.x + obs.width &&
@@ -253,7 +285,6 @@ function draw() {
         ctx.fillRect(obs.x, obs.y, obs.width, obs.height);
     });
 
-    // 🔥 BALAS
     ctx.fillStyle = "yellow";
     bullets.forEach(b => {
         ctx.fillRect(b.x, b.y, b.width, b.height);
