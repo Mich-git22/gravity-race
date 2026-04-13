@@ -20,9 +20,13 @@ html, body{
     user-select:none;
     -webkit-touch-callout:none;
     overflow:hidden;
+
+    /* 🔥 EXTRA ANTI ZOOM */
+    -ms-touch-action:none;
+    touch-action: none;
 }
 
-/* 🔥 CANVAS FULL SCREEN */
+/* 🔥 CANVAS FULL SCREEN REAL */
 canvas{
     border:3px solid white;
     background:#222;
@@ -40,6 +44,9 @@ canvas{
     position:fixed;
     top:0;
     left:0;
+
+    /* 🔥 IMPORTANTE PARA CELULAR */
+    outline:none;
 }
 
 /* 📱 CONTROLES MÓVIL */
@@ -75,4 +82,9 @@ canvas{
     #mobileControls{
         display:flex;
     }
+}
+
+/* 🔥 FIX EXTRA: evita zoom por doble tap en algunos móviles */
+*{
+    -webkit-tap-highlight-color: transparent;
 }

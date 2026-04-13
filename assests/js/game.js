@@ -7,12 +7,15 @@ const ctx = canvas.getContext("2d");
 function ajustarPantalla(){
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
+
+    player.y = canvas.height - player.height;
+    player.grounded = true;
 }
 
 ajustarPantalla();
 window.addEventListener("resize", ajustarPantalla);
 window.addEventListener("orientationchange", () => {
-    setTimeout(ajustarPantalla, 100);
+    setTimeout(ajustarPantalla, 150);
 });
 
 /* =========================
@@ -61,6 +64,47 @@ let score = 0;
 let gameOver = false;
 
 /* =========================
+   🔥 BOTÓN REINICIO (AGREGADO)
+========================= */
+const btnRestart = document.createElement("button");
+btnRestart.innerText = "🔄 Reiniciar";
+
+Object.assign(btnRestart.style, {
+    position: "fixed",
+    bottom: "20px",
+    right: "20px",
+    zIndex: "999",
+    padding: "12px 18px",
+    fontSize: "16px",
+    border: "none",
+    borderRadius: "10px",
+    background: "cyan",
+    color: "black",
+    fontWeight: "bold"
+});
+
+document.body.appendChild(btnRestart);
+
+btnRestart.addEventListener("pointerdown", (e)=>{
+    e.preventDefault();
+    resetGame();
+});
+
+/* =========================
+   RESET GAME
+========================= */
+function resetGame(){
+    obstacles = [];
+    frame = 0;
+    score = 0;
+    gameOver = false;
+
+    player.y = canvas.height - player.height;
+    player.velY = 0;
+    player.grounded = true;
+}
+
+/* =========================
    CONTROLES TECLADO
 ========================= */
 document.addEventListener("keydown", (e) => {
@@ -70,7 +114,7 @@ document.addEventListener("keydown", (e) => {
 });
 
 /* =========================
-   🔥 SALTO
+   🔥 SALTO (TOUCH + TECLADO)
 ========================= */
 function saltar(){
     if (player.grounded) {
@@ -80,7 +124,7 @@ function saltar(){
 }
 
 /* =========================
-   📱 TOUCH MEJORADO
+   📱 TOCAR PANTALLA = SALTAR
 ========================= */
 canvas.addEventListener("pointerdown", function(e){
     e.preventDefault();
@@ -120,8 +164,10 @@ function update() {
         createObstacle();
     }
 
+    let speedFactor = canvas.width > canvas.height ? 7 : 5;
+
     obstacles.forEach((obs, index) => {
-        obs.x -= 5;
+        obs.x -= speedFactor;
 
         if (
             player.x < obs.x + obs.width &&
